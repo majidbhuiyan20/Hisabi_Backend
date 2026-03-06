@@ -12,3 +12,7 @@ func AddProduct(product *model.Product) error {
 func ListProduct() ([]model.Product, error) {
 	return repository.GetAllProducts()
 }
+
+func UpdateProductService(id uint, updatedData *model.Product) (*model.Product, error) {
+	return repository.UpdateProduct(id, updatedData)
+}

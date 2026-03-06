@@ -3,7 +3,9 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
+	"github.com/gorilla/mux"
 	"hisabi.com/m/internal/model"
 	"hisabi.com/m/internal/services"
 	"hisabi.com/m/utils"
@@ -53,4 +55,52 @@ func ProductHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 
 	}
+}
+
+// Update Product Handler Code
+
+func UpdateProductHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idParam := vars["id"]
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(utils.Response{
+			Status:  false,
+			Message: "Invalid product ID",
+			Data:    nil,
+		})
+		return
+
+	}
+
+	var updatedProduct model.Product
+	if err := json.NewDecoder(r.Body).Decode(&updatedProduct); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(utils.Response{
+			Status:  false,
+			Message: "Invalid request body",
+			Data:    nil,
+		})
+		return
+	}
+
+	product, err := services.UpdateProductService(uint(id), &updatedProduct)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(utils.Response{
+			Status:  false,
+			Message: err.Error(),
+			Data:    nil,
+		})
+		return
+	}
+
+	// Success response
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(utils.Response{
+		Status:  true,
+		Message: "Product updated successfully",
+		Data:    product,
+	})
 }

@@ -1,13 +1,13 @@
 package routes
 
 import (
-	"net/http"
-
+	"github.com/gorilla/mux"
 	"hisabi.com/m/internal/handler"
 )
 
-func SetUpRoutes() *http.ServeMux {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/api/v1/products", handler.ProductHandler)
-	return mux
+func SetUpRoutes() *mux.Router {
+	router := mux.NewRouter()
+	router.HandleFunc("/api/v1/products", handler.ProductHandler).Methods("GET", "POST")
+	router.HandleFunc("/api/v1/products/{id}", handler.UpdateProductHandler).Methods("PUT")
+	return router
 }
