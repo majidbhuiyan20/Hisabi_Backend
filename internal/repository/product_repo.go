@@ -6,7 +6,6 @@ import (
 )
 
 func CreateProduct(product *model.Product) error {
-
 	return database.DB.Create(product).Error
 }
 func GetAllProducts() ([]model.Product, error) {

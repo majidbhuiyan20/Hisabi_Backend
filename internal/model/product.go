@@ -9,4 +9,5 @@ type Product struct {
 	PurchasePrice float64 `json:"purchase_price"`
 	SellingPrice  float64 `json:"selling_price"`
 	Stock         int     `json:"stock"`
+	Origin        string  `json:"origin"`
 }
