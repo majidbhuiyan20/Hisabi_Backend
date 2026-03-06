@@ -2,10 +2,11 @@ package database
 
 import (
 	"fmt"
+	"log"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"hisabi.com/m/config"
-	"log"
 )
 
 var DB *gorm.DB

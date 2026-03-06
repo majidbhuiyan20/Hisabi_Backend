@@ -13,10 +13,10 @@ var (
 )
 
 func Load() {
-	DBHost = getEnv("DB_HOST", "loalhost")
+	DBHost = getEnv("DB_HOST", "localhost")
 	DBPort = getEnv("DB_PORT", "5433")
 	DBUser = getEnv("DB_USER", "postgres")
-	DBPassword = getEnv("DP_PASSWORD", "1234")
+	DBPassword = getEnv("DB_PASSWORD", "1234")
 	DBName = getEnv("DB_NAME", "hisabi")
 }
 func getEnv(key, fallback string) string {
