@@ -104,3 +104,42 @@ func UpdateProductHandler(w http.ResponseWriter, r *http.Request) {
 		Data:    product,
 	})
 }
+
+// Delete Product by Id
+
+func DeleteProductHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idParam := vars["id"]
+
+	id, err := strconv.Atoi(idParam)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(utils.Response{
+			Status:  false,
+			Message: "Invalid product ID",
+			Data:    nil,
+		})
+		return
+	}
+
+	// Call Service to delete product
+
+	err = services.DeleteProductService(uint(id))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(utils.Response{
+			Status:  false,
+			Message: "Failed to delete product: " + err.Error(),
+			Data:    nil,
+		})
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(utils.Response{
+		Status:  true,
+		Message: "Product Deleted Successfully",
+		Data:    nil,
+	})
+}

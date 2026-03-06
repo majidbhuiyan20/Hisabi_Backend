@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"fmt"
 
 	database "hisabi.com/m/databases"
 	"hisabi.com/m/internal/model"
@@ -38,4 +39,14 @@ func UpdateProduct(id uint, updatedData *model.Product) (*model.Product, error) 
 		return nil, err
 	}
 	return &product, nil
+}
+
+// Delete Product by ID
+
+func DeleteProduct(id uint) error {
+	result := database.DB.Delete(&model.Product{}, id)
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("Product with ID %d not found", id)
+	}
+	return result.Error
 }
