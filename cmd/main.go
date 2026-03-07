@@ -15,8 +15,15 @@ func main() {
 	config.Load()
 	database.Connect()
 
-	database.DB.AutoMigrate(&model.Product{})
+	// Auto Migration
+	err := database.DB.AutoMigrate(
+		&model.User{},
+		&model.Product{},
+	)
 
+	if err != nil {
+		log.Fatal("Migration failed:", err)
+	}
 	mux := routes.SetUpRoutes()
 
 	log.Println("Server running on port 8080....")

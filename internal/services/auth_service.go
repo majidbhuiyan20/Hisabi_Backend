@@ -49,7 +49,10 @@ func GenerateToken(user *model.User) (string, error) {
 		"user_id": user.ID,
 		"exp":     time.Now().Add(time.Hour * 72).Unix(),
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
+
+	// HS256 for simple secret key
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
 	return token.SignedString(jwtSecret)
 }
 
