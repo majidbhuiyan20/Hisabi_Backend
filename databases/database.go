@@ -12,12 +12,13 @@ import (
 var DB *gorm.DB
 
 func Connect() {
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		config.DBHost,
-		config.DBPort,
-		config.DBUser,
-		config.DBPassword,
-		config.DBName,
+	dsn := fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		config.Config.DBHost,
+		config.Config.DBPort,
+		config.Config.DBUser,
+		config.Config.DBPassword,
+		config.Config.DBName,
 	)
 
 	var err error

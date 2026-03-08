@@ -10,7 +10,7 @@ import (
 	"hisabi.com/m/internal/repository"
 )
 
-var jwtSecret = []byte("superSecretkey")
+var jwtSecret = []byte("superdksdjbcsjdbcSecretkey1234")
 
 // hash Password
 func hashPassword(password string) (string, error) {

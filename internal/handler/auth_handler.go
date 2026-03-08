@@ -55,6 +55,7 @@ func LogicHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.JSON(w, true, "Login Successful", map[string]interface{}{
-		"token": token,
+		"email":    req.Email,
+		"token":    token,
 	})
 }
