@@ -98,7 +98,7 @@ func Register(username, email, password string) (*model.User, error) {
 		return nil, errors.New("internal server error")
 	}
 	if exists {
-		return nil, errors.New("an account with this email already exists")
+		return nil, errors.New("An account with this email already exists")
 	}
 
 	usernameExists, err := repository.UsernameExists(username)
@@ -106,7 +106,7 @@ func Register(username, email, password string) (*model.User, error) {
 		return nil, errors.New("internal server error")
 	}
 	if usernameExists {
-		return nil, errors.New("this username is already taken")
+		return nil, errors.New("An account with this username already exists")
 	}
 
 	hashed, err := hashPassword(password)
