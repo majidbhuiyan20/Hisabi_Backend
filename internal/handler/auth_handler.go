@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"hisabi.com/m/internal/services"
+	"hisabi.com/m/middleware"
 	"hisabi.com/m/utils"
 )
 
@@ -15,47 +16,85 @@ type AuthRequest struct {
 }
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		utils.JSON(w, false, "Method not allowed", nil)
+	var req struct {
+		Username string `json:"username"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.JSON(w, false, "Invalid request body", nil)
 		return
 	}
 
-	var req AuthRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.JSON(w, false, "Invalid Input", nil)
-		return
-	}
 	user, err := services.Register(req.Username, req.Email, req.Password)
 	if err != nil {
 		utils.JSON(w, false, err.Error(), nil)
 		return
 	}
-	utils.JSON(w, true, "User registered Successfully", map[string]interface{}{
-		"user_id": user.ID,
-		"email":   user.Email,
+
+	utils.JSONStatus(w, http.StatusCreated, true, "Account created successfully",
+		map[string]interface{}{
+			"user_id":  user.ID,
+			"username": user.Username,
+			"email":    user.Email,
+		},
+	)
+}
+
+func LoginHandler(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.JSON(w, false, "Invalid request body", nil)
+		return
+	}
+
+	tokens, err := services.Login(req.Email, req.Password)
+	if err != nil {
+		utils.JSONStatus(w, http.StatusUnauthorized, false, err.Error(), nil)
+		return
+	}
+
+	utils.JSON(w, true, "Login successful", map[string]interface{}{
+		"access_token":  tokens.AccessToken,  // valid for 1 hour
+		"refresh_token": tokens.RefreshToken, // valid for 30 days
 	})
 }
 
-func LogicHandler(w http.ResponseWriter, r *http.Request) {
-
-	if r.Method != http.MethodPost {
-		utils.JSON(w, false, "Method not allowed", nil)
-		return
+func RefreshHandler(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		RefreshToken string `json:"refresh_token"`
 	}
-	var req AuthRequest
+
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.JSON(w, false, "Invalid Input", nil)
+		utils.JSON(w, false, "Invalid request body", nil)
 		return
 	}
-	token, err := services.Login(req.Email, req.Password)
 
+	if req.RefreshToken == "" {
+		utils.JSON(w, false, "refresh_token is required", nil)
+		return
+	}
+
+	newToken, err := services.RefreshAccessToken(req.RefreshToken)
 	if err != nil {
-		utils.JSON(w, false, err.Error(), nil)
+		utils.JSONStatus(w, http.StatusUnauthorized, false, err.Error(), nil)
 		return
 	}
 
-	utils.JSON(w, true, "Login Successful", map[string]interface{}{
-		"email":    req.Email,
-		"token":    token,
+	utils.JSON(w, true, "Token refreshed successfully", map[string]string{
+		"access_token": newToken,
+	})
+}
+
+// GET /api/v1/me  — protected
+func MeHandler(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r)
+	utils.JSON(w, true, "success", map[string]interface{}{
+		"user_id": userID,
 	})
 }
