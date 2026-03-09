@@ -11,20 +11,25 @@ import (
 func CreateProduct(product *model.Product) error {
 	return database.DB.Create(product).Error
 }
-func GetAllProducts() ([]model.Product, error) {
+func GetAllProducts(userID uint) ([]model.Product, error) {
 	var products []model.Product
-	err := database.DB.Find(&products).Error
+	err := database.DB.
+		Where("user_id = ?", userID).
+		Order("created_at DESC").
+		Find(&products).Error
 	return products, err
 }
 
 // Update Products by ID
 
-func UpdateProduct(id uint, updatedData *model.Product) (*model.Product, error) {
+func UpdateProduct(id uint, userID uint, updatedData *model.Product) (*model.Product, error) {
 	var product model.Product
 
-	err := database.DB.First(&product, id).Error
+	err := database.DB.
+		Where("id = ? AND user_id = ?", id, userID).
+		First(&product).Error
 	if err != nil {
-		return nil, errors.New("Product not found")
+		return nil, errors.New("product not found or you do not have permission")
 	}
 
 	product.Name = updatedData.Name
@@ -34,8 +39,7 @@ func UpdateProduct(id uint, updatedData *model.Product) (*model.Product, error) 
 	product.Stock = updatedData.Stock
 	product.Origin = updatedData.Origin
 
-	err = database.DB.Save(&product).Error
-	if err != nil {
+	if err := database.DB.Save(&product).Error; err != nil {
 		return nil, err
 	}
 	return &product, nil
@@ -43,10 +47,16 @@ func UpdateProduct(id uint, updatedData *model.Product) (*model.Product, error) 
 
 // Delete Product by ID
 
-func DeleteProduct(id uint) error {
-	result := database.DB.Delete(&model.Product{}, id)
-	if result.RowsAffected == 0 {
-		return fmt.Errorf("Product with ID %d not found", id)
+func DeleteProduct(id uint, userID uint) error {
+	result := database.DB.
+		Where("id = ? AND user_id = ?", id, userID).
+		Delete(&model.Product{})
+
+	if result.Error != nil {
+		return result.Error
 	}
-	return result.Error
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("product not found or you do not have permission")
+	}
+	return nil
 }

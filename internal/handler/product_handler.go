@@ -8,138 +8,103 @@ import (
 	"github.com/gorilla/mux"
 	"hisabi.com/m/internal/model"
 	"hisabi.com/m/internal/services"
+	"hisabi.com/m/middleware"
 	"hisabi.com/m/utils"
 )
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// GET  /api/v1/products
+// POST /api/v1/products
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 func ProductHandler(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r)
+
 	switch r.Method {
+
 	case http.MethodGet:
-		products, err := services.ListProduct()
+		products, err := services.ListProduct(userID)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(utils.Response{
-				Status:  false,
-				Message: "Failed to fetch products: " + err.Error(),
-				Data:    nil,
-			})
+			utils.JSONStatus(w, http.StatusInternalServerError,
+				false, "Failed to fetch products: "+err.Error(), nil)
 			return
 		}
-		//json.NewEncoder(w).Encode(products)
-		json.NewEncoder(w).Encode(utils.Response{
-			Status:  true,
-			Message: "All Products Get Successfully",
-			Data:    products,
-		})
+		utils.JSON(w, true, "Products fetched successfully", products)
 
 	case http.MethodPost:
 		var product model.Product
 		if err := json.NewDecoder(r.Body).Decode(&product); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			utils.JSONStatus(w, http.StatusBadRequest,
+				false, "Invalid request body", nil)
 			return
 		}
 
-		if err := services.AddProduct(&product); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		if err := services.AddProduct(userID, &product); err != nil {
+			utils.JSONStatus(w, http.StatusBadRequest,
+				false, err.Error(), nil)
 			return
 		}
-		w.WriteHeader(http.StatusCreated)
-		// json.NewEncoder(w).Encode(product)
 
-		json.NewEncoder(w).Encode(utils.Response{
-			Status:  true,
-			Message: "Product created successfully",
-			Data:    product,
-		})
+		utils.JSONStatus(w, http.StatusCreated,
+			true, "Product created successfully", product)
 
 	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
-
+		utils.JSONStatus(w, http.StatusMethodNotAllowed,
+			false, "Method not allowed", nil)
 	}
 }
 
-// Update Product Handler Code
-
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// PUT /api/v1/products/{id}
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 func UpdateProductHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	idParam := vars["id"]
-	id, err := strconv.Atoi(idParam)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(utils.Response{
-			Status:  false,
-			Message: "Invalid product ID",
-			Data:    nil,
-		})
-		return
 
+	userID := middleware.GetUserID(r)
+
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		utils.JSONStatus(w, http.StatusBadRequest,
+			false, "Invalid product ID", nil)
+		return
 	}
 
 	var updatedProduct model.Product
 	if err := json.NewDecoder(r.Body).Decode(&updatedProduct); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(utils.Response{
-			Status:  false,
-			Message: "Invalid request body",
-			Data:    nil,
-		})
+		utils.JSONStatus(w, http.StatusBadRequest,
+			false, "Invalid request body", nil)
 		return
 	}
 
-	product, err := services.UpdateProductService(uint(id), &updatedProduct)
+	product, err := services.UpdateProductService(uint(id), userID, &updatedProduct)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(utils.Response{
-			Status:  false,
-			Message: err.Error(),
-			Data:    nil,
-		})
+		utils.JSONStatus(w, http.StatusNotFound,
+			false, err.Error(), nil)
 		return
 	}
 
-	// Success response
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(utils.Response{
-		Status:  true,
-		Message: "Product updated successfully",
-		Data:    product,
-	})
+	utils.JSON(w, true, "Product updated successfully", product)
 }
 
-// Delete Product by Id
-
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// DELETE /api/v1/products/{id}
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 func DeleteProductHandler(w http.ResponseWriter, r *http.Request) {
+
+	userID := middleware.GetUserID(r)
+
 	vars := mux.Vars(r)
-	idParam := vars["id"]
-
-	id, err := strconv.Atoi(idParam)
-
+	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(utils.Response{
-			Status:  false,
-			Message: "Invalid product ID",
-			Data:    nil,
-		})
+		utils.JSONStatus(w, http.StatusBadRequest,
+			false, "Invalid product ID", nil)
 		return
 	}
 
-	// Call Service to delete product
-
-	err = services.DeleteProductService(uint(id))
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(utils.Response{
-			Status:  false,
-			Message: "Failed to delete product: " + err.Error(),
-			Data:    nil,
-		})
+	if err := services.DeleteProductService(uint(id), userID); err != nil {
+		utils.JSONStatus(w, http.StatusNotFound,
+			false, err.Error(), nil)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(utils.Response{
-		Status:  true,
-		Message: "Product Deleted Successfully",
-		Data:    nil,
-	})
+	utils.JSON(w, true, "Product deleted successfully", nil)
 }

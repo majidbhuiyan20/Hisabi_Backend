@@ -15,17 +15,23 @@ func main() {
 	config.Load()
 	database.Connect()
 
+	if err := database.DB.Migrator().DropTable(&model.Product{}); err != nil {
+		log.Println("Could not drop products table (may not exist):", err)
+	}
 	// Auto Migration
 	err := database.DB.AutoMigrate(
 		&model.User{},
 		&model.Product{},
 	)
-
 	if err != nil {
 		log.Fatal("Migration failed:", err)
 	}
+
+	log.Println("Migration complete")
+
 	mux := routes.SetUpRoutes()
 
-	log.Println("Server running on port 8080....")
-	log.Fatal(http.ListenAndServe(":8080", mux))
+	port := config.Config.Port
+	log.Printf("Server running on :%s", port)
+	log.Fatal(http.ListenAndServe(":"+port, mux))
 }
