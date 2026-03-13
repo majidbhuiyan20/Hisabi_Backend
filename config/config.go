@@ -18,8 +18,8 @@ type AppConfig struct {
 	JWTAccessSecret  string
 	JWTRefreshSecret string
 
-	// SMTP fields মুছে দাও, Resend দিয়ে replace
-	ResendAPIKey string // ← নতুন
+	BrevoAPIKey string // Brevo API Key
+	SenderEmail string // তোমার Gmail
 
 	Port string
 }
@@ -33,7 +33,7 @@ func Load() {
 
 	Config = &AppConfig{
 		DBHost:      getEnv("DB_HOST", "localhost"),
-		DBPort:      getEnv("DB_PORT", "5433"),
+		DBPort:      getEnv("DB_PORT", "5432"),
 		DBUser:      getEnv("DB_USER", "postgres"),
 		DBPassword:  getEnv("DB_PASSWORD", "1234"),
 		DBName:      getEnv("DB_NAME", "hisabi"),
@@ -42,7 +42,8 @@ func Load() {
 		JWTAccessSecret:  mustGetEnv("JWT_ACCESS_SECRET"),
 		JWTRefreshSecret: mustGetEnv("JWT_REFRESH_SECRET"),
 
-		ResendAPIKey: mustGetEnv("RESEND_API_KEY"),
+		BrevoAPIKey: mustGetEnv("BREVO_API_KEY"),
+		SenderEmail: mustGetEnv("SENDER_EMAIL"),
 
 		Port: getEnv("PORT", "8080"),
 	}

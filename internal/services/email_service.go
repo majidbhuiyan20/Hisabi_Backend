@@ -12,50 +12,50 @@ import (
 )
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Resend API দিয়ে OTP Email পাঠাও
-// SMTP এর বদলে HTTPS ব্যবহার করে
-// Render এ perfectly কাজ করে
+// Brevo API দিয়ে OTP Email পাঠাও
+// Domain ছাড়াই যেকোনো email এ পাঠাতে পারবে
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 func SendOTPEmail(toEmail, username, otp string) error {
 
-	// ── Request body বানাও ───────────────────────────────
 	payload := map[string]interface{}{
-		"from":    "Hisabi <onboarding@resend.dev>", // Resend এর default sender
-		"to":      []string{toEmail},
-		"subject": "Your Hisabi Verification Code",
-		"html":    buildOTPEmailBody(username, otp),
+		"sender": map[string]string{
+			"name":  "Hisabi",
+			"email": config.Config.SenderEmail, // তোমার Gmail
+		},
+		"to": []map[string]string{
+			{"email": toEmail},
+		},
+		"subject":     "Your Hisabi Verification Code",
+		"htmlContent": buildOTPEmailBody(username, otp),
 	}
 
 	body, err := json.Marshal(payload)
 	if err != nil {
-		return fmt.Errorf("failed to build email payload: %w", err)
+		return fmt.Errorf("failed to build payload: %w", err)
 	}
 
-	// ── Resend API call করো ──────────────────────────────
 	req, err := http.NewRequest(
 		"POST",
-		"https://api.resend.com/emails",
+		"https://api.brevo.com/v3/smtp/email",
 		bytes.NewBuffer(body),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 
-	req.Header.Set("Authorization", "Bearer "+config.Config.ResendAPIKey)
+	req.Header.Set("api-key", config.Config.BrevoAPIKey)
 	req.Header.Set("Content-Type", "application/json")
 
-	// ── Response check করো ───────────────────────────────
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("failed to send email: %w", err)
+		return fmt.Errorf("SMTP connection failed: %w", err)
 	}
 	defer resp.Body.Close()
 
-	// Error হলে response body পড়ো
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != 200 {
+	if resp.StatusCode != 201 {
 		respBody, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("resend API error %d: %s", resp.StatusCode, string(respBody))
+		return fmt.Errorf("brevo API error %d: %s", resp.StatusCode, string(respBody))
 	}
 
 	return nil
