@@ -17,7 +17,6 @@ type AppConfig struct {
 	JWTAccessSecret  string
 	JWTRefreshSecret string
 
-	// ← নতুন যোগ হয়েছে
 	SMTPHost     string
 	SMTPPort     string
 	SMTPEmail    string
@@ -29,8 +28,13 @@ type AppConfig struct {
 var Config *AppConfig
 
 func Load() {
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file, reading from environment")
+
+	// local dev only
+	if os.Getenv("APP_ENV") != "production" {
+		err := godotenv.Load()
+		if err != nil {
+			log.Println("No .env file found")
+		}
 	}
 
 	Config = &AppConfig{
@@ -55,20 +59,17 @@ func Load() {
 }
 
 func getEnv(key, fallback string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
+	val := os.Getenv(key)
+	if val == "" {
+		return fallback
 	}
-	return fallback
+	return val
 }
 
 func mustGetEnv(key string) string {
-	v := os.Getenv(key)
-	if v == "" {
-		log.Fatalf("Required env variable missing: %s", key)
+	val := os.Getenv(key)
+	if val == "" {
+		log.Fatalf("Missing required environment variable: %s", key)
 	}
-	return v
-}
-
-func IsProduction() bool {
-	return os.Getenv("APP_ENV") == "production"
+	return val
 }
