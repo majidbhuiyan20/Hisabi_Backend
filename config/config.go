@@ -8,19 +8,18 @@ import (
 )
 
 type AppConfig struct {
-	DBHost     string
-	DBPort     string
-	DBUser     string
-	DBPassword string
-	DBName     string
+	DBHost      string
+	DBPort      string
+	DBUser      string
+	DBPassword  string
+	DBName      string
+	DatabaseURL string
 
 	JWTAccessSecret  string
 	JWTRefreshSecret string
 
-	SMTPHost     string
-	SMTPPort     string
-	SMTPEmail    string
-	SMTPPassword string
+	// SMTP fields মুছে দাও, Resend দিয়ে replace
+	ResendAPIKey string // ← নতুন
 
 	Port string
 }
@@ -28,48 +27,44 @@ type AppConfig struct {
 var Config *AppConfig
 
 func Load() {
-
-	// local dev only
-	if os.Getenv("APP_ENV") != "production" {
-		err := godotenv.Load()
-		if err != nil {
-			log.Println("No .env file found")
-		}
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file, reading from environment")
 	}
 
 	Config = &AppConfig{
-		DBHost:     getEnv("DB_HOST", "localhost"),
-		DBPort:     getEnv("DB_PORT", "5433"),
-		DBUser:     getEnv("DB_USER", "postgres"),
-		DBPassword: getEnv("DB_PASSWORD", "1234"),
-		DBName:     getEnv("DB_NAME", "hisabi"),
+		DBHost:      getEnv("DB_HOST", "localhost"),
+		DBPort:      getEnv("DB_PORT", "5433"),
+		DBUser:      getEnv("DB_USER", "postgres"),
+		DBPassword:  getEnv("DB_PASSWORD", "1234"),
+		DBName:      getEnv("DB_NAME", "hisabi"),
+		DatabaseURL: getEnv("DATABASE_URL", ""),
 
 		JWTAccessSecret:  mustGetEnv("JWT_ACCESS_SECRET"),
 		JWTRefreshSecret: mustGetEnv("JWT_REFRESH_SECRET"),
 
-		SMTPHost:     getEnv("SMTP_HOST", "smtp.gmail.com"),
-		SMTPPort:     getEnv("SMTP_PORT", "587"),
-		SMTPEmail:    mustGetEnv("SMTP_EMAIL"),
-		SMTPPassword: mustGetEnv("SMTP_PASSWORD"),
+		ResendAPIKey: mustGetEnv("RESEND_API_KEY"),
 
 		Port: getEnv("PORT", "8080"),
 	}
 
-	log.Println("Config loaded")
+	log.Println("✅ Config loaded")
 }
 
 func getEnv(key, fallback string) string {
-	val := os.Getenv(key)
-	if val == "" {
-		return fallback
+	if v := os.Getenv(key); v != "" {
+		return v
 	}
-	return val
+	return fallback
 }
 
 func mustGetEnv(key string) string {
-	val := os.Getenv(key)
-	if val == "" {
-		log.Fatalf("Missing required environment variable: %s", key)
+	v := os.Getenv(key)
+	if v == "" {
+		log.Fatalf("❌ Required env variable missing: %s", key)
 	}
-	return val
+	return v
+}
+
+func IsProduction() bool {
+	return os.Getenv("APP_ENV") == "production"
 }
