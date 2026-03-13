@@ -11,7 +11,7 @@ import (
 func SetUpRoutes() *mux.Router {
 	router := mux.NewRouter()
 
-	// ── Health Check ──────────────────────────────────────
+	// Health check
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(`{"status":"ok"}`))
@@ -19,18 +19,24 @@ func SetUpRoutes() *mux.Router {
 
 	api := router.PathPrefix("/api/v1").Subrouter()
 
-	// ── Public Routes (no token needed) ──────────────────
+	// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	// PUBLIC — token লাগবে না
+	// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 	api.HandleFunc("/register", handler.RegisterHandler).Methods("POST")
+	api.HandleFunc("/verify-otp", handler.VerifyOTPHandler).Methods("POST")
+	api.HandleFunc("/resend-otp", handler.ResendOTPHandler).Methods("POST")
 	api.HandleFunc("/refresh", handler.RefreshHandler).Methods("POST")
 
-	// Login has rate limit — 10 attempts per 5 minutes
+	// Login — rate limited (10 attempts / 5 minutes)
 	api.Handle("/login",
 		middleware.LoginRateLimit(
 			http.HandlerFunc(handler.LoginHandler),
 		),
 	).Methods("POST")
 
-	// ── Protected Routes (JWT token required) ─────────────
+	// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	// PROTECTED — JWT token লাগবে
+	// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 	protected := api.PathPrefix("").Subrouter()
 	protected.Use(middleware.AuthRequired)
 

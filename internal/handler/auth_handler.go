@@ -9,12 +9,10 @@ import (
 	"hisabi.com/m/utils"
 )
 
-type AuthRequest struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// POST /api/v1/register
+// Account বানাও + OTP পাঠাও
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Username string `json:"username"`
@@ -33,15 +31,70 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.JSONStatus(w, http.StatusCreated, true, "Account created successfully",
+	// ✅ Account বানানো হয়েছে, OTP গেছে email এ
+	utils.JSONStatus(w, http.StatusCreated, true,
+		"Account created! Please check your email for the verification code.",
 		map[string]interface{}{
 			"user_id":  user.ID,
-			"username": user.Username,
 			"email":    user.Email,
+			"verified": false,
 		},
 	)
 }
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// POST /api/v1/verify-otp
+// OTP দিয়ে email verify করো
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+func VerifyOTPHandler(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Email string `json:"email"`
+		OTP   string `json:"otp"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.JSON(w, false, "Invalid request body", nil)
+		return
+	}
+
+	if err := services.VerifyOTP(req.Email, req.OTP); err != nil {
+		utils.JSON(w, false, err.Error(), nil)
+		return
+	}
+
+	utils.JSON(w, true, "Email verified successfully! You can now log in.", nil)
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// POST /api/v1/resend-otp
+// OTP আবার পাঠাও (expire বা না পেলে)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+func ResendOTPHandler(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Email string `json:"email"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.JSON(w, false, "Invalid request body", nil)
+		return
+	}
+
+	if req.Email == "" {
+		utils.JSON(w, false, "Email is required", nil)
+		return
+	}
+
+	if err := services.ResendOTP(req.Email); err != nil {
+		utils.JSON(w, false, err.Error(), nil)
+		return
+	}
+
+	utils.JSON(w, true, "A new verification code has been sent to your email.", nil)
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// POST /api/v1/login
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Email    string `json:"email"`
@@ -60,11 +113,14 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.JSON(w, true, "Login successful", map[string]interface{}{
-		"access_token":  tokens.AccessToken,  // valid for 1 hour
-		"refresh_token": tokens.RefreshToken, // valid for 30 days
+		"access_token":  tokens.AccessToken,
+		"refresh_token": tokens.RefreshToken,
 	})
 }
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// POST /api/v1/refresh
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 func RefreshHandler(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		RefreshToken string `json:"refresh_token"`
@@ -74,7 +130,6 @@ func RefreshHandler(w http.ResponseWriter, r *http.Request) {
 		utils.JSON(w, false, "Invalid request body", nil)
 		return
 	}
-
 	if req.RefreshToken == "" {
 		utils.JSON(w, false, "refresh_token is required", nil)
 		return
@@ -91,7 +146,9 @@ func RefreshHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // GET /api/v1/me  — protected
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 func MeHandler(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r)
 	utils.JSON(w, true, "success", map[string]interface{}{

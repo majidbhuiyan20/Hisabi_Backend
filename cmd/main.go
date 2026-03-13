@@ -13,25 +13,23 @@ import (
 func main() {
 
 	config.Load()
+
+	// ② Database connect
 	database.Connect()
 
-	if err := database.DB.Migrator().DropTable(&model.Product{}); err != nil {
-		log.Println("Could not drop products table (may not exist):", err)
-	}
-	// Auto Migration
 	err := database.DB.AutoMigrate(
 		&model.User{},
+		&model.OTP{},
 		&model.Product{},
 	)
 	if err != nil {
-		log.Fatal("Migration failed:", err)
+		log.Fatal("❌ Migration failed:", err)
 	}
-
 	log.Println("Migration complete")
 
 	mux := routes.SetUpRoutes()
 
 	port := config.Config.Port
-	log.Printf("Server running on :%s", port)
+	log.Printf("🚀 Server running on :%s", port)
 	log.Fatal(http.ListenAndServe(":"+port, mux))
 }

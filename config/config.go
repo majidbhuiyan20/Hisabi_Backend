@@ -17,6 +17,12 @@ type AppConfig struct {
 	JWTAccessSecret  string
 	JWTRefreshSecret string
 
+	// ← নতুন যোগ হয়েছে
+	SMTPHost     string
+	SMTPPort     string
+	SMTPEmail    string
+	SMTPPassword string
+
 	Port string
 }
 
@@ -36,6 +42,11 @@ func Load() {
 
 		JWTAccessSecret:  mustGetEnv("JWT_ACCESS_SECRET"),
 		JWTRefreshSecret: mustGetEnv("JWT_REFRESH_SECRET"),
+
+		SMTPHost:     getEnv("SMTP_HOST", "smtp.gmail.com"),
+		SMTPPort:     getEnv("SMTP_PORT", "587"),
+		SMTPEmail:    mustGetEnv("SMTP_EMAIL"),
+		SMTPPassword: mustGetEnv("SMTP_PASSWORD"),
 
 		Port: getEnv("PORT", "8080"),
 	}
