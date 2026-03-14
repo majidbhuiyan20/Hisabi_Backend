@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strings"
 	"time"
+	"log" 
 
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
