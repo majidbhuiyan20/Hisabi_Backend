@@ -18,8 +18,11 @@ type AppConfig struct {
 	JWTAccessSecret  string
 	JWTRefreshSecret string
 
-	BrevoAPIKey string // Brevo API Key
-	SenderEmail string // তোমার Gmail
+	// SMTP — Gmail
+	SMTPHost     string
+	SMTPPort     string
+	SMTPEmail    string
+	SMTPPassword string
 
 	Port string
 }
@@ -42,8 +45,10 @@ func Load() {
 		JWTAccessSecret:  mustGetEnv("JWT_ACCESS_SECRET"),
 		JWTRefreshSecret: mustGetEnv("JWT_REFRESH_SECRET"),
 
-		BrevoAPIKey: mustGetEnv("BREVO_API_KEY"),
-		SenderEmail: mustGetEnv("SENDER_EMAIL"),
+		SMTPHost:     getEnv("SMTP_HOST", "smtp.gmail.com"),
+		SMTPPort:     getEnv("SMTP_PORT", "587"),
+		SMTPEmail:    mustGetEnv("SMTP_EMAIL"),
+		SMTPPassword: mustGetEnv("SMTP_PASSWORD"),
 
 		Port: getEnv("PORT", "8080"),
 	}
