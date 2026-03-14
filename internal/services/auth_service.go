@@ -117,11 +117,10 @@ func Register(username, email, password string) (*model.User, error) {
 	// ── OTP পাঠাও ─────────────────────────────────────────
 	// Goroutine এ পাঠাই — email slow হলেও register response fast হবে
 	go func() {
-		if err := SendVerificationOTP(email, username); err != nil {
-			// Log করো কিন্তু register fail করো না
-			// User resend করতে পারবে
-		}
-	}()
+    if err := SendVerificationOTP(email, username); err != nil {
+        log.Printf("OTP send failed: %v", err)
+    }
+}()
 
 	return user, nil
 }
