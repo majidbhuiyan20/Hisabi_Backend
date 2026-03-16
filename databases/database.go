@@ -17,9 +17,9 @@ func Connect() {
 	if config.Config.DatabaseURL != "" {
 		dsn = config.Config.DatabaseURL
 	} else {
-		
+
 		dsn = fmt.Sprintf(
-			"host=%s port=%s user=%s password=%s dbname=%s sslmode=require",
+			"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 			config.Config.DBHost,
 			config.Config.DBPort,
 			config.Config.DBUser,
