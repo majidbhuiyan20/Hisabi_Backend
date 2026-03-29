@@ -2,9 +2,9 @@ package services
 
 import (
 	"errors"
+	"log"
 	"strings"
 	"time"
-	"log" 
 
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
@@ -71,7 +71,7 @@ func generateTokenPair(user *model.User) (*TokenPair, error) {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Register — account বানাও এবং OTP পাঠাও
+// Register — cretae account + send OTP
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 func Register(username, email, password string) (*model.User, error) {
 
@@ -108,26 +108,26 @@ func Register(username, email, password string) (*model.User, error) {
 		Email:      email,
 		Password:   hashed,
 		IsActive:   true,
-		IsVerified: false, // ← শুরুতে unverified
+		IsVerified: false,
 	}
 
 	if err := repository.CreateUser(user); err != nil {
 		return nil, errors.New("failed to create account")
 	}
 
-	// ── OTP পাঠাও ─────────────────────────────────────────
-	// Goroutine এ পাঠাই — email slow হলেও register response fast হবে
+	// ── send otp ─────────────────────────────────────────
+	// To send OTP without blocking the registration response, we can send it in a separate goroutine. This way, the user gets immediate feedback that their account was created, and the OTP sending happens in the background. If OTP sending fails, we can log the error for later investigation.
 	go func() {
-    if err := SendVerificationOTP(email, username); err != nil {
-        log.Printf("OTP send failed: %v", err)
-    }
-}()
+		if err := SendVerificationOTP(email, username); err != nil {
+			log.Printf("OTP send failed: %v", err)
+		}
+	}()
 
 	return user, nil
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Login — verified user কেই token দাও
+// Login — Give token for verified user
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 func Login(email, password string) (*TokenPair, error) {
 
@@ -146,7 +146,7 @@ func Login(email, password string) (*TokenPair, error) {
 		return nil, errors.New("this account has been deactivated")
 	}
 
-	// ✅ Email verified কিনা check করো
+	// Check email verification status
 	if !user.IsVerified {
 		return nil, errors.New("please verify your email before logging in. Check your inbox for the OTP")
 	}

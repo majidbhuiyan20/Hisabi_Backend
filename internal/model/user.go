@@ -18,7 +18,7 @@ type User struct {
 type OTP struct {
 	gorm.Model
 	Email     string    `gorm:"not null;index;size:100"`
-	Code      string    `gorm:"not null;size:6"` // ৬ digit OTP
+	Code      string    `gorm:"not null;size:6"`
 	ExpiresAt time.Time `gorm:"not null"`
 	IsUsed    bool      `gorm:"default:false"`
 }

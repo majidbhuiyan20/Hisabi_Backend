@@ -10,7 +10,7 @@ import (
 )
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Gmail SMTP দিয়ে OTP Email পাঠাও
+// OTP email send using Gmail SMTP
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 func SendOTPEmail(toEmail, username, otp string) error {
 
@@ -60,7 +60,7 @@ func SendOTPEmail(toEmail, username, otp string) error {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Email Message বানাও
+// Create Email Message
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 func buildMessage(from, to, username, otp string) string {
 	return fmt.Sprintf(
@@ -76,10 +76,10 @@ func buildMessage(from, to, username, otp string) string {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Beautiful HTML Email — OTP একলাইনে সুন্দরভাবে
+// Beautiful HTML Email — OTP
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 func buildOTPEmailBody(username, otp string) string {
-	// OTP digits আলাদা করো: "847291" → "8 4 7 2 9 1"
+	// OTP digits Seperate: "847291" → "8 4 7 2 9 1"
 	digits := strings.Join(strings.Split(otp, ""), "  ")
 
 	return fmt.Sprintf(`<!DOCTYPE html>

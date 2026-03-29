@@ -11,7 +11,7 @@ import (
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // POST /api/v1/register
-// Account বানাও + OTP পাঠাও
+//
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	var req struct {
@@ -44,7 +44,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // POST /api/v1/verify-otp
-// OTP দিয়ে email verify করো
+//
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 func VerifyOTPHandler(w http.ResponseWriter, r *http.Request) {
 	var req struct {
@@ -67,7 +67,6 @@ func VerifyOTPHandler(w http.ResponseWriter, r *http.Request) {
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // POST /api/v1/resend-otp
-// OTP আবার পাঠাও (expire বা না পেলে)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 func ResendOTPHandler(w http.ResponseWriter, r *http.Request) {
 	var req struct {
